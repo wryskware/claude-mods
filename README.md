@@ -39,6 +39,20 @@ It needs the `codex` CLI on `PATH`, logged in, and Linux or macOS (`setsid`, `ba
 Which work goes to Codex, and at what effort, is up to you. Put your routing rules in your
 `CLAUDE.md`.
 
+## Quota line
+
+If `ai-usagebar` is installed, the mod adds one line of Claude and Codex
+usage that the model reads with each prompt and after each `Agent` or `dispatch` call:
+
+```
+[quota, 2m old] claude: 5h 5%, week 30% (+3 vs pace, resets in 5d3h) | codex: week 8% (+5 vs pace, resets in 6d18h) | spawned since: claude 1, codex 2
+```
+
+"vs pace" is percentage points above or below an even burn of the week. The usage is sampled at
+most every 5 minutes, so the line also counts the spawns made since the sample was taken. The
+mod reports the numbers and the model chooses the lane, by your rules. Without `ai-usagebar` the
+line is left out.
+
 ## Per-workspace sandbox
 
 Jobs run under Codex's `workspace-write` sandbox. A workspace can change that with

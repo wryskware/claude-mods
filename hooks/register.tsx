@@ -11,7 +11,8 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import type { AgentRow, JobView } from '../types'
+import type { AgentRow, DispatchInput, JobView } from '../types'
+import { applyQuotaReport, countSpawn, endQuotaRefresh, quotaLine, startQuotaRefresh } from './quota'
 
 const PLUGIN = 'codex-lane'
 const PANE = 'codex-lane'
@@ -105,7 +106,21 @@ async function notify($: EngineInterface, meta: Meta, dir: string, view: JobView
   void $.prompt.submit({ text: parts.join('\n\n') })
 }
 
+/** Asks ai-usagebar for a new quota sample when the last one is stale. */
+async function refreshQuota($: EngineInterface) {
+  if (!startQuotaRefresh()) return
+  try {
+    const ran = await $.process.run(['ai-usagebar', 'usage', '--json'], { timeoutMs: 60_000 })
+    if (ran.exitCode === 0) applyQuotaReport(ran.stdout)
+  } catch {
+    // Not installed or timed out: keep the last sample and try again later.
+  } finally {
+    endQuotaRefresh()
+  }
+}
+
 async function tick($: EngineInterface) {
+  void refreshQuota($)
   if (ticking) return
   ticking = true
   try {
@@ -222,7 +237,8 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: 'mcp__codex-lane__dispatch' }, async ($, e) => {
-    const input = e
+    // The matcher does not narrow `e` to this tool's input; the schema above holds it.
+    const input = e as unknown as DispatchInput
     const { effort } = input
     if (!EFFORTS.includes(effort)) return { deny: `Unknown effort "${effort}"; use one of ${EFFORTS.join(', ')}.` }
 
@@ -267,13 +283,16 @@ export const register: Register = on => {
     void tick($)
 
     const sandbox = [config.sandbox ?? 'workspace-write', config.network && 'network on'].filter(Boolean).join(', ')
+    countSpawn('codex')
+    const quota = quotaLine()
     return {
+      ...(quota ? { context: [quota] } : {}),
       result: `Started Codex job ${id} (effort ${effort}${input.model ? `, ${input.model}` : ''}; ${sandbox}${input.worktree ? ', own worktree' : ''}) in ${cwd}. Its report arrives as a message when it finishes; don't poll. Logs: ${dir}/`,
     }
   })
 
   on('tool.call', { tool: 'mcp__codex-lane__result' }, async ($, e) => {
-    const { id } = e
+    const { id } = e as unknown as { id: string }
     const dir = `${await jobsRoot($)}/${id}`
     if (!(await $.fs.exists(`${dir}/meta.json`))) return { deny: `No Codex job ${id}.` }
     if (!(await $.fs.exists(`${dir}/DONE`))) return { result: `Codex job ${id} is still running. Logs: ${dir}/` }
@@ -284,7 +303,7 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: 'mcp__codex-lane__cancel' }, async ($, e) => {
-    const { id } = e
+    const { id } = e as unknown as { id: string }
     const dir = `${await jobsRoot($)}/${id}`
     if (!(await $.fs.exists(`${dir}/meta.json`))) return { deny: `No Codex job ${id}.` }
     if (await $.fs.exists(`${dir}/DONE`)) return { result: `Codex job ${id} already finished.` }
@@ -296,6 +315,21 @@ export const register: Register = on => {
     await $.fs.write(`${dir}/DONE`, '')
     void tick($)
     return { result: `Cancelled Codex job ${id}.` }
+  })
+
+  // The quota line rides beside each prompt and after each spawn, so the model
+  // can choose a lane with no call of its own.
+  on('prompt.submit', ($, e, next) => {
+    const quota = quotaLine()
+    return next(quota ? { ...e, context: [...(e.context ?? []), quota] } : e)
+  })
+
+  on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
+    const ran = await next(e)
+    if (ran.deny !== undefined) return ran
+    countSpawn('claude')
+    const quota = quotaLine()
+    return quota ? { ...ran, context: [...(ran.context ?? []), quota] } : ran
   })
 
   on('command.run', { command: 'codex' }, async $ => {
