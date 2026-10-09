@@ -5,6 +5,7 @@ Claude Code mods by Wrysk, in one marketplace.
 | Mod | What it does |
 | --- | --- |
 | [`idle-compact`](mods/idle-compact) | Compacts a session that is at least 20% full once it has sat idle for 50 to 60 minutes, while the prompt cache is still warm. |
+| [`codex-lane`](mods/codex-lane) | Runs worker jobs on Codex in the background, with completion notifications and a `/codex` pane. Needs the `codex` CLI. |
 
 ## Install
 
@@ -13,6 +14,7 @@ In any terminal session, at the prompt:
 ```
 /plugin marketplace add <clone>
 /plugin install idle-compact@claude-mods
+/plugin install codex-lane@claude-mods
 ```
 
 Answer `y` to add the marketplace, then choose the user scope so every session gets the mod.
@@ -23,6 +25,7 @@ Or from a shell:
 ```
 claude plugin marketplace add <clone>
 claude plugin install idle-compact@claude-mods --scope user
+claude plugin install codex-lane@claude-mods --scope user
 ```
 
 ## Update
@@ -35,6 +38,7 @@ The marketplace is a folder, so the installed mod reads its files from here. Edi
 ```
 claude plugin validate mods/idle-compact
 claude plugin test mods/idle-compact
+claude plugin validate mods/codex-lane
 ```
 
 Each mod is one folder under `mods/`: `.claude-plugin/plugin.json`, `hooks/hooks.json` naming the

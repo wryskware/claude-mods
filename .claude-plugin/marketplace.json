@@ -8,6 +8,10 @@
     {
       "name": "idle-compact",
       "source": "./mods/idle-compact"
+    },
+    {
+      "name": "codex-lane",
+      "source": "./mods/codex-lane"
     }
   ]
 }
