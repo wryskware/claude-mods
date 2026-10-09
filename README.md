@@ -12,9 +12,8 @@ Claude Code mods by Wrysk, in one marketplace.
 In any terminal session, at the prompt:
 
 ```
-/plugin marketplace add <clone>
-/plugin install idle-compact@claude-mods
-/plugin install codex-lane@claude-mods
+/plugin install idle-compact --marketplace wryskware/claude-mods
+/plugin install codex-lane --marketplace wryskware/claude-mods
 ```
 
 Answer `y` to add the marketplace, then choose the user scope so every session gets the mod.
@@ -23,17 +22,21 @@ Its hooks run in that session from then on, with no reload.
 Or from a shell:
 
 ```
-claude plugin marketplace add <clone>
+claude plugin marketplace add wryskware/claude-mods
 claude plugin install idle-compact@claude-mods --scope user
 claude plugin install codex-lane@claude-mods --scope user
 ```
 
 ## Update
 
-The marketplace is a folder, so the installed mod reads its files from here. Edit a mod, then run
-`/reload-plugins` in the session. No reinstall is needed.
+To pick up a new version, run `claude plugin marketplace update claude-mods` and
+`claude plugin update <mod>@claude-mods`, then `/reload-plugins` in the session.
 
 ## Develop
+
+To work on a mod from a clone, add the clone as the marketplace instead of the GitHub one:
+`claude plugin marketplace add <path to the clone>`. Edits then reach a session on `/reload-plugins`,
+with no new version.
 
 ```
 claude plugin validate mods/idle-compact
@@ -47,5 +50,4 @@ the engine and is not tracked.
 
 ## Sharing
 
-Once this repository is on GitHub, others install a mod with
-`/plugin install <mod> --marketplace <owner>/claude-mods`.
+Anyone can install these from `wryskware/claude-mods` with the lines above. No clone is needed.

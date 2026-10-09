@@ -18,11 +18,10 @@ Each job's files are in `~/.cache/codex-lane/<id>/`: `brief.md`, `meta.json`, `e
 ## Install
 
 ```
-/plugin install codex-lane --marketplace <owner>/claude-mods
+/plugin install codex-lane --marketplace wryskware/claude-mods
 ```
 
-From the local `claude-mods` marketplace: `/plugin install codex-lane@claude-mods`. For one
-session from a checkout: `claude --plugin-dir <clone>/mods/codex-lane`.
+For one session from a clone: `claude --plugin-dir <clone>/mods/codex-lane`.
 
 It needs the `codex` CLI on `PATH`, logged in, and Linux or macOS (`setsid`, `bash`).
 
