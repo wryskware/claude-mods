@@ -1,0 +1,13 @@
+{
+  "name": "claude-mods",
+  "description": "Claude Code mods by Wrysk",
+  "owner": {
+    "name": "Wrysk"
+  },
+  "plugins": [
+    {
+      "name": "idle-compact",
+      "source": "./mods/idle-compact"
+    }
+  ]
+}

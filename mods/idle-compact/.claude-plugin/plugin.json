@@ -1,0 +1,8 @@
+{
+  "name": "idle-compact",
+  "version": "0.1.0",
+  "description": "Compacts the session once it is 20% full and has been idle 50 minutes, while the prompt cache is still warm.",
+  "author": {
+    "name": "Wrysk"
+  }
+}
