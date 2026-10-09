@@ -1,0 +1,13 @@
+{
+  "name": "codex-lane",
+  "description": "Run Claude Code worker jobs on Codex in the background",
+  "owner": {
+    "name": "Wrysk"
+  },
+  "plugins": [
+    {
+      "name": "codex-lane",
+      "source": "./"
+    }
+  ]
+}
