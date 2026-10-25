@@ -1,5 +1,6 @@
 export type JobView = {
   id: string
+  engine?: 'codex' | 'antigravity'
   description: string
   effort: string
   cwd: string
@@ -12,6 +13,7 @@ export type DispatchInput = {
   brief: string
   description: string
   effort: string
+  engine?: 'codex' | 'antigravity'
   cwd?: string
   model?: string
   worktree?: boolean

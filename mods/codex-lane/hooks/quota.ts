@@ -1,4 +1,4 @@
-// Quota lane: one line of Claude/Codex usage the model reads beside each prompt
+// Quota lane: one line of Claude/Codex/Antigravity usage the model reads beside each prompt
 // and after each Agent or dispatch call, so it can pick a lane without asking.
 //
 // The numbers come from `ai-usagebar usage --json`, which owns the credentials
@@ -17,14 +17,16 @@ type Entry = { id: string; metrics?: Metric[]; error?: string | null }
 type Window = { name: string; pct: number; resetsAt?: number; windowSecs?: number }
 type Lane = { windows: Window[]; error?: string }
 
-export type LaneName = 'claude' | 'codex'
+export type LaneName = 'claude' | 'codex' | 'agy'
 
-const VENDORS: Record<string, LaneName> = { anthropic: 'claude', openai: 'codex' }
+const VENDORS: Record<string, LaneName> = { anthropic: 'claude', openai: 'codex', antigravity: 'agy' }
+/** Antigravity also meters its Claude & GPT-OSS models; jobs here use only Gemini. */
+const KEEP: Partial<Record<LaneName, RegExp>> = { agy: /^Gemini/ }
 
 let sample: { at: number; lanes: Partial<Record<LaneName, Lane>> } | undefined
 let lastTry = 0
 let refreshing = false
-const spawned: Record<LaneName, number> = { claude: 0, codex: 0 }
+const spawned: Record<LaneName, number> = { claude: 0, codex: 0, agy: 0 }
 
 /** Counts a spawn on a lane until the next sample shows its usage. */
 export function countSpawn(lane: LaneName) {
@@ -60,7 +62,7 @@ export function applyQuotaReport(stdout: string) {
     lanes[lane] = {
       error: entry.error ?? undefined,
       windows: (entry.metrics ?? [])
-        .filter(m => typeof m.percent === 'number')
+        .filter(m => typeof m.percent === 'number' && (KEEP[lane]?.test(m.label) ?? true))
         .map(m => ({
           name: m.label.replace(/\s*\([^)]*\)\s*$/, '').trim(),
           pct: m.percent as number,
@@ -72,6 +74,7 @@ export function applyQuotaReport(stdout: string) {
   sample = { at: Date.now(), lanes }
   spawned.claude = 0
   spawned.codex = 0
+  spawned.agy = 0
 }
 
 function span(ms: number): string {
@@ -108,8 +111,10 @@ function describe(lane: Lane | undefined, now: number): string {
 export function quotaLine(): string | undefined {
   if (!sample) return undefined
   const now = Date.now()
-  const counts = spawned.claude || spawned.codex
-    ? ` | spawned since: claude ${spawned.claude}, codex ${spawned.codex}`
+  const counts = spawned.claude || spawned.codex || spawned.agy
+    ? ` | spawned since: claude ${spawned.claude}, codex ${spawned.codex}, agy ${spawned.agy}`
     : ''
-  return `[quota, ${span(now - sample.at)} old] claude: ${describe(sample.lanes.claude, now)} | codex: ${describe(sample.lanes.codex, now)}${counts}`
+  // Left out for anyone without Antigravity in ai-usagebar.
+  const agy = sample.lanes.agy ? ` | agy: ${describe(sample.lanes.agy, now)}` : ''
+  return `[quota, ${span(now - sample.at)} old] claude: ${describe(sample.lanes.claude, now)} | codex: ${describe(sample.lanes.codex, now)}${agy}${counts}`
 }

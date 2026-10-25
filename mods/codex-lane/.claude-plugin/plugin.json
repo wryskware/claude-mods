@@ -1,7 +1,7 @@
 {
   "name": "codex-lane",
-  "version": "0.1.0",
-  "description": "Run worker jobs on Codex in the background, with completion notifications and a jobs pane",
+  "version": "0.2.0",
+  "description": "Run worker jobs on Codex or Antigravity (Gemini) in the background, with completion notifications and a jobs pane",
   "types": "./types/index.d.ts",
   "author": {
     "name": "Wrysk"
